@@ -1,0 +1,23 @@
+﻿namespace Student_Project_Management.Helpers
+{
+    public class ApiResponse<T>
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public T? Data { get; set; }
+        public object? Error { get; set; }
+
+
+        public ApiResponse(
+            bool success,
+            string message,
+            T? data = default,
+            object? error = null)
+        {
+            Success = success;
+            Message = message;
+            Data = data;
+            Error = error;
+        }
+    }
+}
