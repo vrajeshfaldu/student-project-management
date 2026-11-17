@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Student_Project_Management.Data;
+using Student_Project_Management.Helpers;
 using Student_Project_Management.Repositories.Implementations;
 using Student_Project_Management.Repositories.Interfaces;
 using Student_Project_Management.Services;
@@ -19,15 +20,40 @@ namespace Student_Project_Management
     {
         public static void Main(string[] args)
         {
+            DotEnv.Load();
+
             var builder = WebApplication.CreateBuilder(args);
+
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+                    ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION")
+                    ?? Environment.GetEnvironmentVariable("DefaultConnection");
+            }
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                builder.Configuration["ConnectionStrings:DefaultConnection"] = connectionString;
+            }
+
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
+                    ?? Environment.GetEnvironmentVariable("JWT_KEY")
+                    ?? "ThisIsMySuperSecretKey1234567890";
+            }
+            if (!string.IsNullOrWhiteSpace(jwtKey))
+            {
+                builder.Configuration["Jwt:Key"] = jwtKey;
+            }
 
             // Add services to the container.
 
             builder.Services.AddControllers();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(connectionString));
 
             builder.Services.AddAuthentication(options =>
             {
@@ -47,7 +73,7 @@ namespace Student_Project_Management
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+                            Encoding.UTF8.GetBytes(jwtKey!)
                         ),
                     ClockSkew = TimeSpan.Zero
                 };
