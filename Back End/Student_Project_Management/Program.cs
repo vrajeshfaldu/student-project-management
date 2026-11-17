@@ -37,16 +37,19 @@ namespace Student_Project_Management
             }
 
             var jwtKey = builder.Configuration["Jwt:Key"];
-            if (string.IsNullOrWhiteSpace(jwtKey))
-            {
-                jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
-                    ?? Environment.GetEnvironmentVariable("JWT_KEY")
-                    ?? "ThisIsMySuperSecretKey1234567890";
-            }
-            if (!string.IsNullOrWhiteSpace(jwtKey))
-            {
-                builder.Configuration["Jwt:Key"] = jwtKey;
-            }
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
+        ?? Environment.GetEnvironmentVariable("JWT_KEY");
+}
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("JWT key is not configured.");
+}
+
+builder.Configuration["Jwt:Key"] = jwtKey;
 
             // Add services to the container.
 
@@ -146,7 +149,7 @@ namespace Student_Project_Management
                 app.MapScalarApiReference();
             }
 
-            app.UseHttpsRedirection();
+            
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseCors("AllowAll");
